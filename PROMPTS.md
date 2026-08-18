@@ -102,4 +102,76 @@ All prompts used with AI assistance during this assignment.
 
 > Now update PROMPTS.md with all missing prompts up to this point
 
-**Context:** Backfill this file with all prompts from both sessions through Prompt 18.
+**Context:** Backfill this file with all prompts from both sessions through Prompt 16.
+
+### Prompt 17
+
+> Updated file looks good. Commit and push to remote.
+
+**Context:** Committed and pushed `update-prompts-md` with the full prompt history.
+
+### Prompt 18
+
+> I missed a **REDACTED** reference in Prompt 1 of PROMPTS.md. Squash the previous commit, add a new commit with my change and push to remote
+
+**Context:** Amended the `update-prompts-md` commit to redact Prompt 1 and force-pushed the branch.
+
+### Prompt 19
+
+> We need to add test coverage. Let's start by focusing on covering the functions parseUsers and fetchUsers.
+
+**Context:** Added `test/client.test.ts` with Node's built-in test runner, exported `parseUsers`, and added `npm test`.
+
+### Prompt 20
+
+> Before we move on to other coverage, move existing tests into it's own directory (i.e. it shouldn't live in ./src) and we also need to create a new branch: add-test-coverage
+
+**Context:** Moved tests to `test/`, created the `add-test-coverage` branch, and updated `tsconfig.json` / `npm test`.
+
+### Prompt 21
+
+> For the next bit of coverage, let's add testing for roundToOneDecimal and average from stats.ts
+
+**Context:** Exported helpers and added unit tests in `test/stats.test.ts`.
+
+### Prompt 22
+
+> Add coverage for groupUsersByCity.
+
+**Context:** Exported `groupUsersByCity` and added grouping tests.
+
+### Prompt 23
+
+> New tests look fine. Now add coverage for findUserWithMostFriends
+
+**Context:** Exported `findUserWithMostFriends` and added per-city tie-breaking tests.
+
+### Prompt 24
+
+> New tests look good. Now add coverage for collectAllFriendHobbies
+
+**Context:** Exported `collectAllFriendHobbies` and added hobby-collection tests.
+
+### Prompt 25
+
+> Looks good. Let's finish off coverage for stats.ts by adding tests for findMostCommon and findMostCommonHobby
+
+**Context:** Exported both helpers and added frequency/tie-breaking tests.
+
+### Prompt 26
+
+> And finally add coverage for computeStats
+
+**Context:** Added integration tests covering all five CLI output fields, including empty-input behavior.
+
+### Prompt 27
+
+> Now let's finish up with coverage for index.ts
+
+**Context:** Exported `main`/`printUsage`, added injectable CLI dependencies, and added `test/index.test.ts`.
+
+### Prompt 28
+
+> Test coverage looks good. Update PROMPTS.md with all prompts that have processed since the last update.
+
+**Context:** Backfill this file with prompts from Prompt 17 through Prompt 28.

@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "node --import tsx --test test/client.test.ts test/stats.test.ts test/index.test.ts"
   },
   "engines": {
     "node": ">=18"

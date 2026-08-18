@@ -1,6 +1,6 @@
 import type { User } from "./types.js";
 
-function parseUsers(body: string): User[] {
+export function parseUsers(body: string): User[] {
   const trimmed = body.trim();
 
   if (trimmed.length === 0) {
