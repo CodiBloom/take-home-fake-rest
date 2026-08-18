@@ -1,4 +1,4 @@
-import type { MostCommonName, MostFriendsUser, StatsResult, User } from "./types.js";
+import type { MostCommonHobby, MostCommonName, MostFriendsUser, StatsResult, User } from "./types.js";
 
 function groupUsersByCity(users: User[]): Map<string, User[]> {
   const byCity = new Map<string, User[]>();
@@ -52,6 +52,27 @@ function findMostCommon(values: string[]): MostCommonName {
   return { name: topName, count: topCount };
 }
 
+function findMostCommonHobby(hobbies: string[]): MostCommonHobby {
+  const result = findMostCommon(hobbies);
+
+  return {
+    hobby: result.name,
+    count: result.count,
+  };
+}
+
+function collectAllFriendHobbies(users: User[]): string[] {
+  const hobbies: string[] = [];
+
+  for (const user of users) {
+    for (const friend of user.friends) {
+      hobbies.push(...friend.hobbies);
+    }
+  }
+
+  return hobbies;
+}
+
 function findUserWithMostFriends(cityUsers: User[]): MostFriendsUser {
   let topUser = cityUsers[0];
 
@@ -92,5 +113,6 @@ export function computeStats(users: User[]): StatsResult {
     averageFriendsPerCity,
     mostFriendsPerCity,
     mostCommonFirstName: findMostCommon(users.map((user) => user.name)),
+    mostCommonHobby: findMostCommonHobby(collectAllFriendHobbies(users)),
   };
 }

@@ -36,8 +36,9 @@ The tool computes the following metrics:
 2. **Average number of friends per city** — `averageFriendsPerCity`
 3. **User with the most friends per city** — `mostFriendsPerCity`
 4. **Most common first name across all cities** — `mostCommonFirstName`
+5. **Most common hobby among all friends** — `mostCommonHobby`
 
-All average values are rounded to one decimal place. When multiple users in a city share the highest friend count, the user with the lowest `id` is chosen. When multiple first names tie for the highest count, the name that comes first alphabetically is chosen.
+All average values are rounded to one decimal place. When multiple users in a city share the highest friend count, the user with the lowest `id` is chosen. When multiple first names or hobbies tie for the highest count, the value that comes first alphabetically is chosen.
 
 Example output:
 
@@ -66,6 +67,10 @@ Example output:
   "mostCommonFirstName": {
     "name": "Michael",
     "count": 842
+  },
+  "mostCommonHobby": {
+    "hobby": "Music",
+    "count": 1205
   }
 }
 ```
