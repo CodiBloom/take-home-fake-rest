@@ -1,0 +1,25 @@
+{
+  "name": "fake-rest-client",
+  "version": "1.0.0",
+  "description": "CLI REST client that processes fake REST API user data",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "fake-rest-stats": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
