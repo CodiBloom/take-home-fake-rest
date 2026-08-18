@@ -16,6 +16,12 @@ export interface StatsResult {
   averageFriendsPerCity: Record<string, number>;
   mostFriendsPerCity: Record<string, MostFriendsUser>;
   mostCommonFirstName: MostCommonName;
+  mostCommonHobby: MostCommonHobby;
+}
+
+export interface MostCommonHobby {
+  hobby: string;
+  count: number;
 }
 
 export interface MostCommonName {
