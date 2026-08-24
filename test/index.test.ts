@@ -31,6 +31,10 @@ const sampleStats: StatsResult = {
   },
 };
 
+async function* singleUserStream(): AsyncGenerator<User> {
+  yield sampleUser;
+}
+
 describe("printUsage", () => {
   afterEach(() => {
     mock.restoreAll();
@@ -83,9 +87,11 @@ describe("main", () => {
     assert.equal(stderr[0], "Invalid URL: not-a-url");
   });
 
-  test("fetches users, computes stats, and prints JSON", async () => {
-    const fetchUsers = mock.fn(async () => [sampleUser]);
-    const computeStats = mock.fn(() => sampleStats);
+  test("streams users, computes stats, and prints JSON", async () => {
+    const streamUsers = mock.fn(async function* () {
+      yield sampleUser;
+    });
+    const computeStatsFromStream = mock.fn(async () => sampleStats);
 
     const stdout: string[] = [];
     mock.method(console, "log", (...args: unknown[]) => {
@@ -95,35 +101,45 @@ describe("main", () => {
     const { main } = await import("../src/index.js");
     const exitCode = await main(
       ["node", "fake-rest-stats", "http://localhost:3000"],
-      { fetchUsers, computeStats },
+      { streamUsers, computeStatsFromStream },
     );
 
     assert.equal(exitCode, 0);
-    assert.equal(fetchUsers.mock.callCount(), 1);
-    assert.equal(fetchUsers.mock.calls[0]?.arguments[0], "http://localhost:3000");
-    assert.equal(computeStats.mock.callCount(), 1);
-    assert.deepEqual(computeStats.mock.calls[0]?.arguments[0], [sampleUser]);
+    assert.equal(streamUsers.mock.callCount(), 1);
+    assert.equal(streamUsers.mock.calls[0]?.arguments[0], "http://localhost:3000");
+    assert.equal(computeStatsFromStream.mock.callCount(), 1);
     assert.deepEqual(JSON.parse(stdout[0]!), sampleStats);
   });
 
-  test("returns 1 and prints errors from fetchUsers", async () => {
+  test("returns 1 and prints errors from the streaming pipeline", async () => {
     const stderr: string[] = [];
     mock.method(console, "error", (...args: unknown[]) => {
       stderr.push(args.map(String).join(" "));
     });
 
+    const { computeStatsFromStream } = await import("../src/stats.js");
     const { main } = await import("../src/index.js");
     const exitCode = await main(
       ["node", "fake-rest-stats", "http://localhost:3000"],
       {
-        fetchUsers: async () => {
+        streamUsers: async function* () {
           throw new Error("Request failed with status 500 Internal Server Error");
         },
-        computeStats: () => sampleStats,
+        computeStatsFromStream,
       },
     );
 
     assert.equal(exitCode, 1);
     assert.equal(stderr[0], "Request failed with status 500 Internal Server Error");
+  });
+});
+
+describe("computeStatsFromStream", () => {
+  test("matches computeStats for streamed input", async () => {
+    const { computeStats, computeStatsFromStream } = await import("../src/stats.js");
+
+    const stats = await computeStatsFromStream(singleUserStream());
+
+    assert.deepEqual(stats, computeStats([sampleUser]));
   });
 });
