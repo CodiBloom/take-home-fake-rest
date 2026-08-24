@@ -2,18 +2,18 @@
 
 import { pathToFileURL } from "node:url";
 
-import { fetchUsers } from "./client.js";
-import { computeStats } from "./stats.js";
+import { streamUsers } from "./client.js";
+import { computeStatsFromStream } from "./stats.js";
 import type { StatsResult, User } from "./types.js";
 
 export interface CliDependencies {
-  fetchUsers: (endpoint: string) => Promise<User[]>;
-  computeStats: (users: User[]) => StatsResult;
+  streamUsers: (endpoint: string) => AsyncGenerator<User>;
+  computeStatsFromStream: (users: AsyncIterable<User>) => Promise<StatsResult>;
 }
 
 const defaultDependencies: CliDependencies = {
-  fetchUsers,
-  computeStats,
+  streamUsers,
+  computeStatsFromStream,
 };
 
 export function printUsage(): void {
@@ -40,8 +40,9 @@ export async function main(
   }
 
   try {
-    const users = await dependencies.fetchUsers(endpoint);
-    const stats = dependencies.computeStats(users);
+    const stats = await dependencies.computeStatsFromStream(
+      dependencies.streamUsers(endpoint),
+    );
     console.log(JSON.stringify(stats, null, 2));
     return 0;
   } catch (error) {

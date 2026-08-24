@@ -1,5 +1,18 @@
 import type { MostCommonHobby, MostCommonName, MostFriendsUser, StatsResult, User } from "./types.js";
 
+interface CityAccumulator {
+  ageSum: number;
+  count: number;
+  friendsSum: number;
+  mostFriends: MostFriendsUser;
+}
+
+export interface StatsAccumulator {
+  cities: Map<string, CityAccumulator>;
+  nameCounts: Map<string, number>;
+  hobbyCounts: Map<string, number>;
+}
+
 export function groupUsersByCity(users: User[]): Map<string, User[]> {
   const byCity = new Map<string, User[]>();
 
@@ -36,6 +49,23 @@ export function findMostCommon(values: string[]): MostCommonName {
     counts.set(value, (counts.get(value) ?? 0) + 1);
   }
 
+  let topName = "";
+  let topCount = 0;
+
+  for (const [name, count] of counts) {
+    if (
+      count > topCount ||
+      (count === topCount && name.localeCompare(topName) < 0)
+    ) {
+      topName = name;
+      topCount = count;
+    }
+  }
+
+  return { name: topName, count: topCount };
+}
+
+export function findMostCommonFromCounts(counts: Map<string, number>): MostCommonName {
   let topName = "";
   let topCount = 0;
 
@@ -95,24 +125,117 @@ export function findUserWithMostFriends(cityUsers: User[]): MostFriendsUser {
   };
 }
 
-export function computeStats(users: User[]): StatsResult {
-  const byCity = groupUsersByCity(users);
+function shouldReplaceMostFriends(
+  current: MostFriendsUser,
+  candidate: User,
+): boolean {
+  const candidateFriendCount = candidate.friends.length;
 
+  return (
+    candidateFriendCount > current.friendCount ||
+    (candidateFriendCount === current.friendCount && candidate.id < current.id)
+  );
+}
+
+export function createStatsAccumulator(): StatsAccumulator {
+  return {
+    cities: new Map(),
+    nameCounts: new Map(),
+    hobbyCounts: new Map(),
+  };
+}
+
+export function addUserToStats(accumulator: StatsAccumulator, user: User): void {
+  const cityAccumulator = accumulator.cities.get(user.city);
+
+  if (cityAccumulator) {
+    cityAccumulator.ageSum += user.age;
+    cityAccumulator.count += 1;
+    cityAccumulator.friendsSum += user.friends.length;
+
+    if (shouldReplaceMostFriends(cityAccumulator.mostFriends, user)) {
+      cityAccumulator.mostFriends = {
+        id: user.id,
+        name: user.name,
+        friendCount: user.friends.length,
+      };
+    }
+  } else {
+    accumulator.cities.set(user.city, {
+      ageSum: user.age,
+      count: 1,
+      friendsSum: user.friends.length,
+      mostFriends: {
+        id: user.id,
+        name: user.name,
+        friendCount: user.friends.length,
+      },
+    });
+  }
+
+  accumulator.nameCounts.set(
+    user.name,
+    (accumulator.nameCounts.get(user.name) ?? 0) + 1,
+  );
+
+  for (const friend of user.friends) {
+    for (const hobby of friend.hobbies) {
+      accumulator.hobbyCounts.set(
+        hobby,
+        (accumulator.hobbyCounts.get(hobby) ?? 0) + 1,
+      );
+    }
+  }
+}
+
+export function finalizeStats(accumulator: StatsAccumulator): StatsResult {
   const averageAgePerCity: Record<string, number> = {};
   const averageFriendsPerCity: Record<string, number> = {};
   const mostFriendsPerCity: Record<string, MostFriendsUser> = {};
 
-  for (const [city, cityUsers] of byCity) {
-    averageAgePerCity[city] = average(cityUsers.map((user) => user.age));
-    averageFriendsPerCity[city] = average(cityUsers.map((user) => user.friends.length));
-    mostFriendsPerCity[city] = findUserWithMostFriends(cityUsers);
+  for (const [city, cityAccumulator] of accumulator.cities) {
+    averageAgePerCity[city] = roundToOneDecimal(
+      cityAccumulator.ageSum / cityAccumulator.count,
+    );
+    averageFriendsPerCity[city] = roundToOneDecimal(
+      cityAccumulator.friendsSum / cityAccumulator.count,
+    );
+    mostFriendsPerCity[city] = cityAccumulator.mostFriends;
   }
+
+  const mostCommonFirstName = findMostCommonFromCounts(accumulator.nameCounts);
+  const mostCommonHobbyResult = findMostCommonFromCounts(accumulator.hobbyCounts);
 
   return {
     averageAgePerCity,
     averageFriendsPerCity,
     mostFriendsPerCity,
-    mostCommonFirstName: findMostCommon(users.map((user) => user.name)),
-    mostCommonHobby: findMostCommonHobby(collectAllFriendHobbies(users)),
+    mostCommonFirstName,
+    mostCommonHobby: {
+      hobby: mostCommonHobbyResult.name,
+      count: mostCommonHobbyResult.count,
+    },
   };
+}
+
+export async function computeStatsFromStream(
+  users: AsyncIterable<User>,
+): Promise<StatsResult> {
+  const accumulator = createStatsAccumulator();
+
+  for await (const user of users) {
+    addUserToStats(accumulator, user);
+  }
+
+  return finalizeStats(accumulator);
+}
+
+export function computeStats(users: User[]): StatsResult {
+  const accumulator = createStatsAccumulator();
+
+  for (const user of users) {
+    addUserToStats(accumulator, user);
+  }
+
+  return finalizeStats(accumulator);
 }
